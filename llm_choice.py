@@ -1,6 +1,8 @@
 import streamlit as st
 import openai
 from functions import fetch_from_llama
+import os
+from dotenv import load_dotenv
 
 def get_llm():
     """
@@ -17,31 +19,21 @@ def get_llm():
 
 def _fetch_openai_chat(prompt: str) -> str:
     """
-    Makes an openai.ChatCompletion call, 
-    grabbing the main text from .choices[0].message["content"].
+    Uses openai.ChatCompletion with the API key from .env file.
     """
-    openai.api_key = st.secrets.get("OPENAI_API_KEY","")
-    model = "gpt-3.5-turbo"
-    if st.session_state["llm_choice"] == "openai_o3_mini":
-        model = "o3-mini"  # hypothetical or fine-tuned
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
-    system_msg = (
-        "You are an AI assistant returning answers in plain text. "
-        "We'll specify if we want JSON. Provide direct responses."
-    )
+    if not openai.api_key:
+        raise ValueError("❌ Missing OpenAI API Key. Check `.env` file.")
+
     try:
-        resp = openai.ChatCompletion.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_msg},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=st.session_state.get("model_temperature",0.2),
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
         )
-        return resp.choices[0].message["content"]
+        return response.choices[0].message["content"]
     except Exception as e:
-        st.error(f"OpenAI Chat error: {e}")
-        return str(e)
+        return f"OpenAI error: {e}"
 
 def _fetch_local_llama(prompt: str) -> str:
     """

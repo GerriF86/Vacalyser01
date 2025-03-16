@@ -17,6 +17,10 @@ def show_progress_bar(current_page, total_pages):
     """
     fraction = (current_page + 1) / total_pages
     st.progress(fraction)
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # Load environment variables from .env
 
 #####################################
 # SIDEBAR LINKS

@@ -2,7 +2,10 @@ import streamlit as st
 from navigation import PAGE_FUNCTIONS
 from ui_elements import show_progress_bar
 from functions import get_from_session_state
+from dotenv import load_dotenv
+import os
 
+load_dotenv()  # Load environment variables from .env
 def main():
     # 1) Set Streamlit’s page title + layout (wide).
     st.set_page_config(page_title="Vacalyser", layout="wide")

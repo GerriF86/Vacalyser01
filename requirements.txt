@@ -21,3 +21,4 @@ openai
 # but you might add 'torch' or 'torchvision' if needed:
 torch>=2.0.0
 torchvision>=0.15.0
+python-dotenv

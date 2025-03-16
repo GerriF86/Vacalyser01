@@ -6,6 +6,16 @@ import json
 import tempfile
 import PyPDF2
 import docx
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
+
+# Retrieve API key from .env
+openai_key = os.getenv("OPENAI_API_KEY")
+if not openai_key:
+    raise ValueError("❌ Missing OpenAI API Key. Check `.env` file.")
+
 
 def store_in_state(key, value):
     """
