@@ -261,14 +261,16 @@ def start_discovery_page():
     st.image("images/sthree.png", width=80)
     st.title("Vacalyser")
 
-    # GPT example call
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": "Hello, world!"}]
-    )
-    # Print response to console (or just show in app)
-    st.write("GPT Example Response:", response.choices[0].message.content)
-
+    +    # GPT example call (OpenAI ≥ 1.0)
++    from openai import OpenAI
++    client = OpenAI()                         # key from env / st.secrets
++    resp = client.chat.completions.create(
++        model="gpt-4o",
++        messages=[{"role": "user", "content": "Hello, world!"}],
++        temperature=0.7,
++        max_tokens=50,
++    )
++    st.write("GPT Example Response:", resp.choices[0].message.content)
     st.markdown(
         "**Enhancing hiring workflows** with intelligent suggestions and automations. "
         "We help teams fine-tune job postings and CVs efficiently for better hiring outcomes."
