@@ -5,6 +5,8 @@ from src.utils import extraction, ollama_utils, openai_utils, scraping, preproce
 from src.session_state import initialize_session_state
 from src.services.llm_service import LLMService
 import openai
+from openai import OpenAI
+
 
 # Load environment variables
 load_dotenv()
@@ -262,16 +264,15 @@ def start_discovery_page():
     st.title("Vacalyser")
 
     +    # GPT example call (OpenAI ≥ 1.0)
-+    from openai import OpenAI
-+    client = OpenAI()                         # key from env / st.secrets
-+    resp = client.chat.completions.create(
-+        model="gpt-4o",
-+        messages=[{"role": "user", "content": "Hello, world!"}],
-+        temperature=0.7,
-+        max_tokens=50,
-+    )
-+    st.write("GPT Example Response:", resp.choices[0].message.content)
-    st.markdown(
+    client = OpenAI()                         # key from env / st.secrets
+    resp = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "Hello, world!"}],
+        temperature=0.7,
+        max_tokens=50,
+    )
+    st.write("GPT Example Response:", resp.choices[0].message.content)
+  st.markdown(
         "**Enhancing hiring workflows** with intelligent suggestions and automations. "
         "We help teams fine-tune job postings and CVs efficiently for better hiring outcomes."
     )
