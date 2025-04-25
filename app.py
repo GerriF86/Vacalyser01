@@ -12,9 +12,6 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://127.0.0.1:11434")
 
-# Set up LLM Service
-llm_service = LLMService(openai_api_key=OPENAI_API_KEY, local_model="llama3")
-
 # Initialize session state
 initialize_session_state()
 
