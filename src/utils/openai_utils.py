@@ -1,87 +1,198 @@
-# openai_utils.py
+"""
+src/utils/openai_utils.py
+─────────────────────────
+Unified helper that hides the difference between
+
+• OpenAI Chat Completions API              (provider="openai")
+• A local Hugging-Face text-generation model (provider="local")
+
+Example
+-------
+from src.utils.openai_utils import LLMClient
+
+llm = LLMClient(provider="openai")           # or "local"
+reply = llm.chat(
+    prompt="Write a 1-sentence job ad for a Data Scientist.",
+    system_message="You are an efficient HR copy-writer.",
+)
+print(reply)
+"""
+
+from __future__ import annotations
 
 import os
-import re
-from typing import List, Optional
-import openai
-import requests
+from typing import Optional, Sequence, Dict, Any
+
 import streamlit as st
 
-from dotenv import load_dotenv
+# --------------------------------------------------------------------------- #
+# Try to import optional deps only when needed
+# --------------------------------------------------------------------------- #
+try:
+    from openai import OpenAI                              # ≥ 1.0 client
+except ImportError:  # pragma: no cover
+    OpenAI = None
 
-load_dotenv()  # This will read .env file and set environment variables
+# --------------------------------------------------------------------------- #
+# Main helper
+# --------------------------------------------------------------------------- #
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def __init__(self, openai_api_key: Optional[str] = None, local_model: Optional[str] = None, default_openai_model: str = "gpt-3.5-turbo"):
+class LLMClient:
+    """Tiny façade that wraps either OpenAI or a local HF pipeline."""
+
+    # ------------------------------------------------------------------ #
+    # Construction
+    # ------------------------------------------------------------------ #
+    def __init__(
+        self,
+        provider: str = "openai",
+        *,
+        # --- OpenAI specific ------------------------------------------ #
+        openai_api_key: Optional[str] = None,
+        openai_org: Optional[str] = None,
+        openai_model: str = "gpt-4o",
+        # --- Local model specific ------------------------------------- #
+        local_model: Optional[str] = None,
+        hf_device_map: str | Dict[str, Any] = "auto",
+    ) -> None:
         """
-        :param openai_api_key: your OpenAI key (if using OpenAI).
-        :param local_model: local HF model path (if using a local model).
-        :param default_openai_model: which GPT model to use (e.g., gpt-3.5-turbo).
+        Parameters
+        ----------
+        provider :
+            "openai"  → OpenAI Chat Completions API  
+            "local"   → Hugging-Face `transformers.pipeline`
+        openai_api_key :
+            Overrides the OPENAI_API_KEY env var / st.secrets.
+        local_model :
+            Model id or local path understood by 🤗 transformers.
         """
-        self.provider = "openai"
-        self.openai_model = default_openai_model
-        self._pipeline = None
+        self.provider = provider.lower().strip()
+        if self.provider not in ("openai", "local"):
+            raise ValueError("provider must be 'openai' or 'local'")
 
-        if local_model:
-            # Use local HF model
-            self.provider = "local"
-            try:
-                from transformers import pipeline
-            except ImportError:
-                raise ImportError("Please install 'transformers' to use local models.")
-            try:
-                self._pipeline = pipeline("text-generation", model=local_model, tokenizer=local_model, device_map="auto")
-            except Exception as e:
-                raise RuntimeError(f"Failed to load local model '{local_model}': {e}")
-        else:
-            # Use OpenAI
-            try:
-                import openai
-            except ImportError:
-                raise ImportError("Please install 'openai' to use OpenAI API.")
-            if openai_api_key:
-                openai.api_key = openai_api_key
-            else:
-                env_key = st.secrets["OPENAI_API_KEY"]
-                if env_key:
-                    openai.api_key = env_key
-                else:
-                    raise ValueError("No OpenAI API key provided or found in environment.")
-            self.provider = "openai"
+        self._client = None          # OpenAI client
+        self._pipeline = None        # HF pipeline
+        self.model_name = openai_model if self.provider == "openai" else local_model
 
-def openai_completion(self, prompt: str, system_message: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 100) -> str:
-        """
-        Generate text using either OpenAI ChatCompletion or a local HF pipeline.
-        """
         if self.provider == "openai":
-            import openai
-            messages = []
+            if OpenAI is None:  # pragma: no cover
+                raise ImportError("pip install openai")
+            key = (
+                openai_api_key
+                or os.getenv("OPENAI_API_KEY")
+                or st.secrets.get("OPENAI_API_KEY", "")
+            )
+            if not key:
+                raise RuntimeError("OPENAI_API_KEY is missing.")
+
+            self._client = OpenAI(api_key=key, organization=openai_org)
+
+        else:  # local Hugging-Face model
+            if local_model is None:
+                raise ValueError("local_model must be given when provider='local'")
+            try:
+                from transformers import pipeline  # lazy import
+            except ImportError as exc:  # pragma: no cover
+                raise ImportError("pip install transformers") from exc
+
+            self._pipeline = pipeline(
+                "text-generation",
+                model=local_model,
+                tokenizer=local_model,
+                device_map=hf_device_map,
+            )
+
+    # ------------------------------------------------------------------ #
+    # Chat Completion (main public method)
+    # ------------------------------------------------------------------ #
+    def chat(
+        self,
+        prompt: str,
+        *,
+        system_message: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 256,
+    ) -> str:
+        """
+        Generate a single text answer.
+
+        Returns the plain string (no role / metadata).
+        """
+
+        if self.provider == "openai":
+            messages: list[dict[str, str]] = []
             if system_message:
                 messages.append({"role": "system", "content": system_message})
             messages.append({"role": "user", "content": prompt})
+
             try:
-                response = openai.ChatCompletion.create(
-                    model=self.openai_model,
+                resp = self._client.chat.completions.create(
+                    model=self.model_name,
                     messages=messages,
                     temperature=temperature,
                     max_tokens=max_tokens,
-                    n=1
                 )
-                return response["choices"][0]["message"]["content"].strip()
-            except Exception as e:
-                raise RuntimeError(f"OpenAI API request failed: {e}")
-        else:
-            # Local HF pipeline
-            if not self._pipeline:
-                raise RuntimeError("Local pipeline not initialized.")
-            full_prompt = (system_message + "\n" + prompt) if system_message else prompt
-            try:
-                outputs = self._pipeline(full_prompt, max_new_tokens=max_tokens, do_sample=True, temperature=temperature, num_return_sequences=1)
-                generated_text = outputs[0]["generated_text"]
-                # Remove prompt from output if present
-                if generated_text.startswith(full_prompt):
-                    generated_text = generated_text[len(full_prompt):]
-                return generated_text.strip()
-            except Exception as e:
-                raise RuntimeError(f"Local model generation failed: {e}")
+            except Exception as err:  # pragma: no cover
+                raise RuntimeError(f"OpenAI request failed → {err}") from err
+
+            return resp.choices[0].message.content.strip()
+
+        # --- Local model branch -------------------------------------- #
+        assert self._pipeline is not None  # type checker happy
+        full_prompt = f"{system_message}\n{prompt}" if system_message else prompt
+        try:
+            out = self._pipeline(
+                full_prompt,
+                max_new_tokens=max_tokens,
+                do_sample=True,
+                temperature=temperature,
+                num_return_sequences=1,
+            )[0]["generated_text"]
+            if out.startswith(full_prompt):
+                out = out[len(full_prompt):]
+            return out.strip()
+        except Exception as err:  # pragma: no cover
+            raise RuntimeError(f"Local model generation failed → {err}") from err
+
+    # ------------------------------------------------------------------ #
+    # Convenience wrapper for non-chat models (legacy code compatibility)
+    # ------------------------------------------------------------------ #
+    def openai_completion(
+        self,
+        prompt: str,
+        *,
+        temperature: float = 0.7,
+        max_tokens: int = 256,
+    ) -> str:
+        """Alias kept for old calls that expected `openai_completion()`."""
+        return self.chat(prompt, temperature=temperature, max_tokens=max_tokens)
+
+
+# --------------------------------------------------------------------------- #
+# Module-level singleton for quick scripts (optional)
+# --------------------------------------------------------------------------- #
+_default_client: Optional[LLMClient] = None
+
+
+def _get_default() -> LLMClient:
+    global _default_client
+    if _default_client is None:
+        _default_client = LLMClient(provider="openai")
+    return _default_client
+
+
+# Legacy functional API – kept so other modules using
+# `from openai_utils import openai_completion` don’t crash.
+def openai_completion(
+    prompt: str,
+    system_message: Optional[str] = None,
+    temperature: float = 0.7,
+    max_tokens: int = 256,
+) -> str:
+    return _get_default().chat(
+        prompt,
+        system_message=system_message,
+        temperature=temperature,
+        max_tokens=max_tokens,
+    )
