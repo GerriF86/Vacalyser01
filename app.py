@@ -8,7 +8,7 @@ import openai
 
 # Load environment variables
 load_dotenv()
-st.set_page_config(page_title="Vacancy Wizard", layout="wide")
+
 initialize_session_state()
 # Initialize API Keys
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
