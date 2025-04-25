@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from src.utils import extraction, ollama_utils, openai_utils, scraping, preprocessing
 from src.session_state import initialize_session_state
 from src.services.llm_service import LLMService
+import openai
 
 # Load environment variables
 load_dotenv()
