@@ -1,24 +1,10 @@
-# requirements.txt
-
-# Streamlit: pick a version ≥1.18 if you want st.rerun()
-streamlit==1.28.0
-
-# HTTP, JSON, general usage
-requests
-
-# For PDF & DOCX parsing
-PyPDF2
-python-docx
-
-# FAISS for retrieval-augmented generation
-faiss-cpu
-sentence-transformers
-
-# OpenAI for ChatCompletion or embeddings
-openai
-
-# (Optional) If you plan to run local LLaMA, you likely have a separate environment,
-# but you might add 'torch' or 'torchvision' if needed:
-torch>=2.0.0
-torchvision>=0.15.0
+openai>=1.0.0
+streamlit
 python-dotenv
+transformers
+torch
+requests
+PyMuPDF
+beautifulsoup4
+lxml
+python-docx
