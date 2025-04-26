@@ -2,7 +2,8 @@ import fitz  # PyMuPDF
 import docx
 from .preprocessing import clean_text
 import json
-from src.services.llm_service import LLMService
+from src.utils.llm_service import LLMService
+
 
 def extract_structured_info(raw_text, keys):
     llm_service = LLMService()
