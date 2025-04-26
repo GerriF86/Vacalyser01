@@ -263,7 +263,6 @@ def start_discovery_page():
     st.image("images/sthree.png", width=80)
     st.title("Vacalyser")
 
-    +    # GPT example call (OpenAI ≥ 1.0)
     client = OpenAI()                         # key from env / st.secrets
     resp = client.chat.completions.create(
         model="gpt-4o",
