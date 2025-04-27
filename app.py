@@ -550,15 +550,6 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY")
 OLLAMA_API_URL = os.getenv("OLLAMA_API_URL") or st.secrets.get("OLLAMA_API_URL", "http://127.0.0.1:11434")
 
-# Model selection
-provider = st.radio(
-    "Choose Model",
-    options=["OpenAI GPT-4o-mini", "Local LLaMA"],
-    index=0,
-    horizontal=True,
-    help="Local uses an Ollama server running a LLaMA model."
-)
-provider_key = "ollama" if provider.startswith("Local") else "openai"
 # Initialize LLM service
 try:
     llm = LLMService(
