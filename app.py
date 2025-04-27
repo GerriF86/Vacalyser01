@@ -1050,36 +1050,45 @@ def render_step_8():
             st.code(st.session_state['generated_boolean_query'], language="")
 
 def main():
+    # ---------- Session & UI-Grundlagen ----------
+    initialize_session_state()           # Session-Keys anlegen
     apply_base_styling()
     show_sidebar_links()
-    if "wizard_step" not in st.session_state:
-        initialize_session_state()
-    step = st.session_state.get("wizard_step", 1)
-    if step == 1:
-        start_discovery_page()
-    elif step == 2:
-        render_step_2()
-    elif step == 3:
-        render_step_3()
-    elif step == 4:
-        render_step_4()
-    elif step == 5:
-        render_step_5()
-    elif step == 6:
-        render_step_6()
-    elif step == 7:
-        render_step_7()
-    elif step == 8:
-        render_step_8()
-    # Navigation buttons
-    if step > 1:
-        if st.button("⬅️ Back"):
-            st.session_state["wizard_step"] -= 1
+
+    # ---------- Schritt sicherstellen ----------
+    raw_step = st.session_state.get("wizard_step", 1)
+    try:
+        step = int(raw_step)
+    except (ValueError, TypeError):
+        step = 1
+    st.session_state["wizard_step"] = step      # garantiert int
+
+    # ---------- Router ----------
+    PAGES = {
+        1: start_discovery_page,
+        2: render_step_2,
+        3: render_step_3,
+        4: render_step_4,
+        5: render_step_5,
+        6: render_step_6,
+        7: render_step_7,
+        8: render_step_8,
+    }
+    PAGES[step]()                         # passende Seite rendern
+
+    # ---------- Navigation ----------
+    col_back, col_next = st.columns(2)
+
+    with col_back:
+        if step > 1 and st.button("⬅️ Back", key="btn_back"):
+            st.session_state["wizard_step"] = int(step - 1)
             st.experimental_rerun()
-    if step < 8:
-        if st.button("Next ➡"):
-            st.session_state["wizard_step"] += 1
+
+    with col_next:
+        if step < 8 and st.button("Next ➡", key="btn_next"):
+            st.session_state["wizard_step"] = int(step + 1)
             st.experimental_rerun()
+
 
 if __name__ == "__main__":
     main()
