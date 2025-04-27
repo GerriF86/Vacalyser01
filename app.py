@@ -9,6 +9,8 @@ from src.session_state import initialize_session_state
 from src.services.llm_service import LLMService
 import plotly.express as px
 
+st.set_page_config(page_title="Vacalyser Wizard", layout="wide")
+
 # Load environment variables (e.g., for API keys)
 load_dotenv()
 
@@ -1048,7 +1050,6 @@ def render_step_8():
             st.code(st.session_state['generated_boolean_query'], language="")
 
 def main():
-    st.set_page_config(page_title="Vacalyser Wizard", layout="wide")
     apply_base_styling()
     show_sidebar_links()
     if "wizard_step" not in st.session_state:
