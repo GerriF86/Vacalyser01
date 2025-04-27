@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from src.utils import extraction, preprocessing
 from src.session_state import initialize_session_state
 from src.services.llm_service import LLMService
+import plotly.express as px
 
 # Load environment variables (e.g., for API keys)
 load_dotenv()
@@ -517,18 +518,15 @@ def render_step_8():
                 info += f"Level: {st.session_state['job_level']}\n"
             # Include key skills
             key_skills = st.session_state["must_have_skills"] or st.session_state["hard_skills"]
-            if
-```python
-import streamlit as st
-import os
-import requests
-import json
-import plotly.express as px
-from bs4 import BeautifulSoup
-from dotenv import load_dotenv
-from src.utils import extraction, preprocessing
-from src.session_state import initialize_session_state
-from src.services.llm_service import LLMService
+if st.session_state.get("generated_prep"):
+    st.subheader("Generated Interview Prep Guide")
+    prep_text = st.session_state["generated_prep"]
+    st.text_area("Interview Prep", prep_text, height=200)
+    st.download_button(
+        "Download Prep Guide (TXT)",
+        prep_text,
+        file_name="InterviewPrep.txt"
+    )
 
 # Attempt to import PDF generator
 try:
