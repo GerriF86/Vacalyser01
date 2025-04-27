@@ -1,101 +1,83 @@
-import os, json, requests, streamlit as st
-from typing import Literal, List, Dict, Any
-
-try:
-    from openai import OpenAI        # only needed if provider=="openai"
-except ImportError:
-    OpenAI = None                    # protect local-only deployments
-
+import os
+import json
+import requests
 
 class LLMService:
-    """
-    Unified wrapper around either a local Ollama instance **or** the OpenAI API.
-    Call `generate()` and forget the rest.
-    """
-    def __init__(
-        self,
-        provider: Literal["ollama", "openai"],
-        ollama_api_url: str = "http://127.0.0.1:11434",
-        ollama_model: str = "llama3.2:3b",
-        openai_api_key: str | None = None,
-        openai_model: str = "gpt-4o",
-        openai_org: str | None = None,
-    ) -> None:
+    """Service to interact with either OpenAI or a local LLM (via Ollama)."""
+    def __init__(self, provider: str = "openai", openai_api_key: str = "", openai_org: str = "", openai_model: str = "gpt-3.5-turbo", 
+                 ollama_api_url: str = "http://127.0.0.1:11434", ollama_model: str = "llama2:3b"):
+        """
+        Initialize the LLM service.
+        provider: "openai" or "ollama"
+        openai_api_key: API key for OpenAI
+        openai_org: OpenAI organization (if required)
+        openai_model: model name for OpenAI (e.g., "gpt-4" or "gpt-3.5-turbo")
+        ollama_api_url: base URL for Ollama local model API
+        ollama_model: model name for local LLM via Ollama
+        """
+        self.provider = provider
+        self.openai_model = openai_model
+        self.ollama_url = ollama_api_url
+        self.ollama_model = ollama_model
+        if provider == "openai":
+            try:
+                import openai
+            except ImportError:
+                raise ImportError("OpenAI library not installed.")
+            if openai_api_key:
+                openai.api_key = openai_api_key
+            if openai_org:
+                openai.organization = openai_org
+            self.openai_model = openai_model
+        elif provider == "ollama":
+            # For local, ensure requests is available (requests imported above)
+            self.ollama_url = ollama_api_url
+            self.ollama_model = ollama_model
+        else:
+            raise ValueError("Unsupported LLM provider. Choose 'openai' or 'ollama'.")
 
-        self.provider = provider.lower()
-        if self.provider not in ("ollama", "openai"):
-            raise ValueError("provider must be 'ollama' or 'openai'")
-
-        # --- Ollama specific ---
-        self.ollama_api_url = ollama_api_url.rstrip("/")
-        self.ollama_model   = ollama_model
-
-        # --- OpenAI specific ---
-        self.openai_model   = openai_model
+    def complete(self, prompt: str, system_message: str = None, max_tokens: int = 256, temperature: float = 0.7) -> str:
+        """
+        Generate a completion for the given prompt using the specified LLM provider and model.
+        For OpenAI, uses ChatCompletion API. For Ollama (local), uses its HTTP API.
+        """
         if self.provider == "openai":
-            if OpenAI is None:
-                raise ImportError("openai-python is not installed.")
-            self._client = OpenAI(
-                api_key=openai_api_key or os.getenv("OPENAI_API_KEY"),
-                organization=openai_org or os.getenv("OPENAI_ORGANIZATION")
-            )
-
-    # --------------------------------------------------------------------- #
-    # Public API
-    # --------------------------------------------------------------------- #
-    def generate(
-        self,
-        prompt: str,
-        max_tokens: int = 256,
-        **kwargs
-    ) -> str:
-        if self.provider == "ollama":
-            return self._generate_ollama(prompt, max_tokens=max_tokens, **kwargs)
-        return self._generate_openai(prompt, max_tokens=max_tokens, **kwargs)
-
-    # --------------------------------------------------------------------- #
-    # Private helpers
-    # --------------------------------------------------------------------- #
-    def _generate_ollama(
-        self,
-        prompt: str,
-        max_tokens: int,
-        num_ctx: int = 512,
-        stream: bool = False,
-    ) -> str:
-        url = f"{self.ollama_api_url}/api/generate"
-        payload = {
-            "model": self.ollama_model,
-            "prompt": prompt,
-            "num_ctx": num_ctx,
-            "num_predict": max_tokens,
-            "stream": stream,
-        }
-
-        try:
-            r = requests.post(url, json=payload, timeout=120)
-            r.raise_for_status()
-            # Ollama returns *one* JSON line when stream=False
-            data = r.json()
-            return data.get("response", "")
-        except (requests.RequestException, json.JSONDecodeError) as e:
-            st.error(f"Ollama error → {e}")
-            return ""
-
-    def _generate_openai(
-        self,
-        prompt: str,
-        max_tokens: int,
-        temperature: float = 0.7,
-    ) -> str:
-        try:
-            response = self._client.chat.completions.create(
+            import openai
+            messages = []
+            if system_message:
+                messages.append({"role": "system", "content": system_message})
+            messages.append({"role": "user", "content": prompt})
+            response = openai.ChatCompletion.create(
                 model=self.openai_model,
-                messages=[{"role": "user", "content": prompt}],
+                messages=messages,
                 max_tokens=max_tokens,
-                temperature=temperature,
+                temperature=temperature
             )
-            return response.choices[0].message.content
-        except Exception as e:  # pylint: disable=broad-except
-            st.error(f"OpenAI error → {e}")
+            return response["choices"][0]["message"]["content"].strip()
+        elif self.provider == "ollama":
+            url = f"{self.ollama_url}/api/generate"
+            payload = {
+                "model": self.ollama_model,
+                "prompt": prompt,
+                "num_ctx": 2048,
+                "num_predict": max_tokens,
+                "temperature": temperature,
+                "stream": False
+            }
+            try:
+                res = requests.post(url, json=payload, timeout=120)
+                res.raise_for_status()
+            except requests.RequestException as e:
+                return f"Error: {e}"
+            lines = res.text.strip().splitlines()
+            output_text = ""
+            for line in lines:
+                try:
+                    data = json.loads(line)
+                    if "response" in data:
+                        output_text += data["response"]
+                except json.JSONDecodeError:
+                    continue
+            return output_text.strip()
+        else:
             return ""
