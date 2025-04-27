@@ -1,10 +1,33 @@
-openai>=1.13,<2.0
-streamlit
-python-dotenv
-transformers
-torch
-requests
-PyMuPDF
-beautifulsoup4
-lxml
-python-docx
+# ──────────────────────────────────────────────────────────
+# Core runtime – Streamlit Cloud uses Python 3.11.12
+streamlit==1.32.2
+
+# LLM / API
+openai==1.14.3           # official ≥1.0 client
+tiktoken==0.6.0          # fast tokeniser used by openai-python
+transformers==4.38.2     # only needed when "Local LLaMA" is selected
+
+# Vector search
+faiss-cpu==1.7.4         # CPU build; works on Streamlit Cloud
+
+# PDF & DOCX parsing
+PyMuPDF==1.23.6          # (import fitz)
+python-docx==1.1.0
+
+# General scraping / HTTP
+requests==2.31.0
+beautifulsoup4==4.12.3
+
+# Data handling & viz
+pandas==2.2.2
+plotly==5.20.0
+
+# Misc utilities
+python-dotenv==1.0.1
+fpdf2==2.7.7             # tiny PDF export helper
+pillow==10.3.0           # required by fpdf2 & Streamlit for images
+
+# OPTIONAL – if you embed new documents locally
+sentence-transformers==2.6.1
+
+# ──────────────────────────────────────────────────────────
