@@ -4,8 +4,8 @@ streamlit==1.32.2
 
 # LLM / API
 openai>1.12           # official ≥1.0 client
-openai-agents>=0.1.0
-pydantic>=2.7
+#openai-agents>=0.1.0
+#pydantic>=2.7
 tiktoken==0.6.0          # fast tokeniser used by openai-python
 transformers==4.38.2     # only needed when "Local LLaMA" is selected
 
