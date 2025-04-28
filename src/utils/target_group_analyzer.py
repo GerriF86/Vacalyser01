@@ -1,5 +1,5 @@
 # src/utils/target_group_analyzer.py
-from src.services.llm_service import LLMService
+from src.utils.llm_service import LLMService
 
 def analyze_target_group(job_title: str, company: str, role_description: str) -> str:
     """
