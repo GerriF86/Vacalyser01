@@ -1,37 +1,10 @@
-"""
-src/utils/openai_utils.py
-─────────────────────────
-Unified helper that hides the difference between
-
-• OpenAI Chat Completions API              (provider="openai")
-• A local Hugging-Face text-generation model (provider="local")
-
-Example
--------
-from src.utils.openai_utils import LLMClient
-
-llm = LLMClient(provider="openai")           # or "local"
-reply = llm.chat(
-    prompt="Write a 1-sentence job ad for a Data Scientist.",
-    system_message="You are an efficient HR copy-writer.",
-)
-print(reply)
-"""
+#openai_utils.py
 
 from __future__ import annotations
-
 import os
 from typing import Optional, Sequence, Dict, Any
-
 import streamlit as st
-
-# --------------------------------------------------------------------------- #
-# Try to import optional deps only when needed
-# --------------------------------------------------------------------------- #
-try:
-    from openai import OpenAI, Client                           # ≥ 1.0 client
-except ImportError:  # pragma: no cover
-    OpenAI = None
+from openai import OpenAI, Client                         
 
 # --------------------------------------------------------------------------- #
 # Main helper
