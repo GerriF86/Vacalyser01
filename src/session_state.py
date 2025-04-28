@@ -1,9 +1,4 @@
-"""
-Centralised initialisation for Streamlit session_state.
-
-Add new keys here once and the whole wizard can read / write them
-safely (no KeyError worries).
-"""
+#session_state.py
 
 from __future__ import annotations
 import streamlit as st
