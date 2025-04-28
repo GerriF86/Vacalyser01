@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from src.utils import extraction, preprocessing
 from src.session_state import initialize_session_state
-from src.services.llm_service import LLMService
+from src.utils.llm_service import LLMService
 import plotly.express as px
 
 st.set_page_config(page_title="Vacalyser Wizard", layout="wide")
