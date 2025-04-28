@@ -3,6 +3,7 @@ base="light"
 primaryColor="#004aad"
 secondaryBackgroundColor="#F5F7FA"
 textColor="#222222"
+font = "sans serif"
 
 [server]
 headless = true
