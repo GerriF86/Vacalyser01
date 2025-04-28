@@ -8,8 +8,13 @@ from src.utils import extraction, preprocessing
 from src.session_state import initialize_session_state
 from src.utils.llm_service import LLMService
 import plotly.express as px
+from openai import Client
+from openai_agents import Agent, function_tool
+from pydantic import BaseModel, Field
 
 st.set_page_config(page_title="Vacalyser Wizard", layout="wide")
+
+client = Client()   # liest automatisch OPENAI_API_KEY
 
 # Load environment variables (e.g., for API keys)
 load_dotenv()
