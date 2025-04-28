@@ -1,3 +1,5 @@
+#ui.py
+
 import streamlit as st
 
 def apply_base_styling():
