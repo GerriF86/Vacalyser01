@@ -3,7 +3,7 @@ import re
 import fitz  # PyMuPDF for PDF extraction
 import docx
 import json
-from src.services.llm_service import LLMService
+from src.utils.llm_service import LLMService
 
 def clean_text(text: str) -> str:
     """Basic cleaning of text: remove extra whitespace."""
