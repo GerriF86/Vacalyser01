@@ -1,3 +1,5 @@
+#drag_drop_skills.py
+
 import streamlit as st
 
 def drag_drop_skills_component():
