@@ -29,7 +29,7 @@ import streamlit as st
 # Try to import optional deps only when needed
 # --------------------------------------------------------------------------- #
 try:
-    from openai import OpenAI                              # ≥ 1.0 client
+    from openai import OpenAI, Client                           # ≥ 1.0 client
 except ImportError:  # pragma: no cover
     OpenAI = None
 
