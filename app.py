@@ -552,25 +552,6 @@ def text_to_pdf_bytes(text: str) -> bytes:
     pdf.multi_cell(0, 10, text)
     return pdf.output(dest='S').encode('latin-1', errors='ignore')
 
-# Load environment variables (for API keys, etc.)
-load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY") or client = Client()
-OLLAMA_API_URL = os.getenv("OLLAMA_API_URL") or st.secrets.get("OLLAMA_API_URL", "http://127.0.0.1:11434")
-
-# Initialize LLM service
-try:
-    llm = LLMService(
-        provider=provider_key,
-        ollama_api_url=OLLAMA_API_URL or "http://127.0.0.1:11434",
-        ollama_model="llama3.2:3b",
-        openai_api_key=OPENAI_API_KEY,
-        openai_org=st.secrets.get("OPENAI_ORGANIZATION"),
-        openai_model="gpt-4o"
-    )
-except Exception as e:
-    st.error(f"Failed to initialize LLM: {e}")
-    st.stop()
-
 def parse_file(uploaded_file) -> str:
     """Read uploaded file (pdf/docx/txt) and return text."""
     import os
