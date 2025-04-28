@@ -1,3 +1,5 @@
+#validation.py
+
 def validate_salary_input(salary_input: str) -> bool:
     """
     Example validation function for a salary range format.
