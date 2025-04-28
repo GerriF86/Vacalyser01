@@ -1,5 +1,5 @@
 # src/utils/boolean_search.py
-from src.services.llm_service import LLMService
+from src.utils.llm_service import LLMService
 
 def generate_boolean_search(key_skills: list, job_title: str) -> str:
     """
